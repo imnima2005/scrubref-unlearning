@@ -1,0 +1,35 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+.ipynb_checkpoints/
+.vscode/
+
+# Environments
+venv/
+.venv/
+env/
+
+# Datasets 
+data/*
+!data/.gitkeep
+!data/README.md
+
+# Pretrained Models & Checkpoints 
+checkpoints/*
+!checkpoints/.gitkeep
+!checkpoints/README.md
+*.pt
+*.pth
+*.keras
+*.h5
+
+# Logs & Experiment Outputs
+results/
+wandb/
+runs/
+*.log
+
+# OS specific
+.DS_Store
+Thumbs.db
