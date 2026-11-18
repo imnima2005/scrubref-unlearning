@@ -6,7 +6,7 @@ data_root: "./data"
 results_root: "./results"
 checkpoint_paths:
   cifar10: "./checkpoints/cifar10_cnn_best.keras"
-  cifar100: "./checkpoints/cifar100_efficientnet_85.keras"
+  cifar100: "./checkpoints/cifar100_trained_original.keras"
   imagewoof: "./checkpoints/imagewoof_effb0_fixed.keras"
   imagenet100: "./checkpoints/imagenet100_model.keras"
 initial_weights_paths:
