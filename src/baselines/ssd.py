@@ -1,3 +1,20 @@
+import numpy as np
+import tensorflow as tf
+from typing import List
+from src.config import ExperimentConfig
+
+from src.data_loader import (
+    DataBundle,
+    UnlearningSplit,
+    make_dataset
+)
+
+from src.models import (
+    set_all_trainable,
+    clone_with_weights
+)
+
+
 def estimate_fisher_diagonal(
     model: tf.keras.Model,
     items: np.ndarray,

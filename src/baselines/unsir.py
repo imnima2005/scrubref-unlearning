@@ -1,3 +1,23 @@
+import numpy as np
+import tensorflow as tf
+from src.config import ExperimentConfig
+from typing import Sequence
+
+from src.data_loader import (
+    DataBundle,
+    UnlearningSplit,
+    materialize_items
+)
+
+from src.models import (
+    clone_with_weights
+)
+
+from src.training import (
+    train_supervised
+)
+
+from src.proxy_generation import generate_unsir_error_maximizing_noise
 def unsir_baseline(
     original: tf.keras.Model,
     split: UnlearningSplit,
