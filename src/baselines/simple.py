@@ -1,3 +1,23 @@
+import numpy as np
+import tensorflow as tf
+from typing import Sequence
+
+from src.data_loader import (
+    DataBundle,
+    UnlearningSplit
+)
+
+from src.models import (
+    clone_with_weights,
+    fresh_clone
+)
+
+from src.config import ExperimentConfig
+from src.models import (
+    classifier_layer
+)
+from src.training import train_supervised
+
 def logit_clamp_baseline(
     original: tf.keras.Model,
     bundle: DataBundle,
@@ -16,7 +36,6 @@ def logit_clamp_baseline(
     else:
         classifier.set_weights([kernel])
     return model
-
 
 def head_reset_baseline(
     original: tf.keras.Model,
@@ -49,7 +68,6 @@ def head_reset_baseline(
         train_all=False,
         tail_layers=0,
     )
-
 
 def retain_finetune_baseline(
     original: tf.keras.Model,

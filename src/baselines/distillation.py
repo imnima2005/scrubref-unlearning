@@ -1,3 +1,23 @@
+import numpy as np
+import tensorflow as tf
+import math
+
+from src.data_loader import (
+    DataBundle,
+    UnlearningSplit,
+    make_dataset
+)
+
+from src.models import (
+    clone_with_weights,
+    fresh_clone,
+    set_all_trainable,
+    output_to_probs
+)
+
+from src.config import ExperimentConfig
+from src.scrubref import categorical_kl
+
 def bad_teacher_baseline(
     original: tf.keras.Model,
     split: UnlearningSplit,
@@ -50,7 +70,6 @@ def bad_teacher_baseline(
             losses.append(float(step(retain_images, retain_labels, forget_images).numpy()))
         print(f"Bad Teacher epoch {epoch + 1}: loss={np.mean(losses):.6f}")
     return student
-
 
 def scrub_baseline(
     original: tf.keras.Model,

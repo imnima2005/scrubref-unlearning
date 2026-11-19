@@ -1,9 +1,12 @@
 from pathlib import Path
 import hashlib
 import ctypes,gc,os,random
-
+import json
 import numpy as np
 import tensorflow as tf
+from typing import Dict
+
+from src.models import custom_objects
 
 def file_md5(path: Path, chunk_size: int = 8 * 1024 * 1024) -> str:
     digest = hashlib.md5()
@@ -56,3 +59,12 @@ def array_memory_mb(*arrays: np.ndarray) -> float:
     )
     return float(total_bytes / (1024 ** 2))
 
+def method_model_path(run_dir: Path, method: str) -> Path:
+    return run_dir / "models" / f"{method}.keras"
+
+def save_json(path: Path, data: Dict[str, object]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(data, indent=2, default=str), encoding="utf-8")
+
+def load_saved_model(path: Path) -> tf.keras.Model:
+    return tf.keras.models.load_model(path, custom_objects=custom_objects(), compile=False, safe_mode=False)

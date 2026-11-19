@@ -1,3 +1,22 @@
+from typing import List, Tuple, Optional
+from pathlib import Path
+
+import numpy as np
+import tensorflow as tf
+
+from src.config import ExperimentConfig
+from src.data_loader import (
+    DataBundle, make_dataset
+)
+
+from src.models import (
+    build_resnet18,
+    set_all_trainable,
+    set_tail_trainable,
+    custom_objects
+)
+
+
 def load_or_train_original(
     cfg: ExperimentConfig,
     bundle: DataBundle,
@@ -26,13 +45,12 @@ def load_or_train_original(
             validation=None,
             train_all=True,
         )
-        source = str(f"./checkpoints/{cfd.dataset}_trained_original.keras")
+        source = str(f"./checkpoints/{cfg.dataset}_trained_original.keras")
         model.save(source)
     sample_ds = make_dataset(bundle.train_items[:16], bundle.train_labels[:16], bundle, 16, False, False, False, seed)
     sample_x, _ = next(iter(sample_ds))
     output_is_logits = infer_output_is_logits(model, sample_x, cfg.output_is_logits)
     return model, output_is_logits, source
-
 
 def compile_supervised(model: tf.keras.Model, output_is_logits: bool, learning_rate: float) -> None:
     model.compile(
@@ -40,7 +58,6 @@ def compile_supervised(model: tf.keras.Model, output_is_logits: bool, learning_r
         loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=output_is_logits),
         metrics=[tf.keras.metrics.SparseCategoricalAccuracy(name="accuracy")],
     )
-
 
 def train_supervised(
     model: tf.keras.Model,
@@ -73,7 +90,6 @@ def train_supervised(
         ))
     model.fit(train_ds, validation_data=validation_ds, epochs=epochs, verbose=2, callbacks=callbacks)
     return model
-
 
 def infer_output_is_logits(model: tf.keras.Model, sample_batch: tf.Tensor, override: Optional[bool]) -> bool:
     if override is not None:

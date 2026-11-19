@@ -1,11 +1,59 @@
-def method_model_path(run_dir: Path, method: str) -> Path:
-    return run_dir / "models" / f"{method}.keras"
+from typing import Dict, List, Sequence, Tuple
+from pathlib import Path
+import json
+import time
+
+from dataclasses import asdict
 
 
-def save_json(path: Path, data: Dict[str, object]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(data, indent=2, default=str), encoding="utf-8")
+import numpy as np
+import pandas as pd
+import tensorflow as tf
 
+from src.data_loader import (
+    UnlearningSplit,
+    DataBundle,
+    load_dataset,
+    make_unlearning_split,
+)
+
+from src.config import ExperimentConfig
+from src.models import clone_with_weights
+
+from src.baselines.simple import (
+    retrain_baseline,
+    logit_clamp_baseline,
+    head_reset_baseline,
+    retain_finetune_baseline,
+)
+from src.baselines.distillation import (
+    bad_teacher_baseline,
+    scrub_baseline
+)
+from src.baselines.ssd import ssd_baseline
+from src.baselines.unsir import unsir_baseline
+
+from src.scrubref import scrubref_train
+
+from src.utils import reset_tensorflow, array_memory_mb, release_memory, method_model_path, save_json, load_saved_model
+from src.training import load_or_train_original
+from src.proxy_generation import generate_class_proxies
+from src.representation_audit import (
+    make_seed_figures,
+    stratified_indices, 
+    extract_features,
+    representation_probe_metrics,
+    linear_cka,
+    jensen_shannon_divergence
+)
+
+from src.metrics import (
+    predict_probabilities,
+    peak_gpu_memory_mb,
+    parameter_change_statistics,
+    evaluate_membership_inference,
+    evaluate_utility,
+)
 
 def build_method(
     method: str,
@@ -47,11 +95,6 @@ def build_method(
     if method == "ssd":
         return ssd_baseline(original, split, bundle, output_is_logits, cfg, seed), metadata
     raise ValueError(f"Unknown method: {method}")
-
-
-def load_saved_model(path: Path) -> tf.keras.Model:
-    return tf.keras.models.load_model(path, custom_objects=custom_objects(), compile=False, safe_mode=False)
-
 
 def run_seed(
     cfg: ExperimentConfig,
@@ -207,7 +250,6 @@ def run_seed(
     release_memory(clear_session=True)
     return outputs
 
-
 def run_representation_audit(
     cfg: ExperimentConfig,
     run_dir: Path,
@@ -357,60 +399,3 @@ def run_representation_audit(
     pd.DataFrame(rows).to_csv(run_dir / "representation_metrics.csv", index=False)
     del original_features, retrained_features, retrained_probs, labels, train_idx, test_idx, cka_idx
     release_memory(clear_session=True)
-
-    def make_seed_figures(run_dir: Path) -> None:
-    utility = pd.read_csv(run_dir / "utility_metrics.csv")
-    mia = pd.read_csv(run_dir / "mia_metrics.csv")
-    representation_path = run_dir / "representation_metrics.csv"
-    representation = pd.read_csv(representation_path) if representation_path.exists() else pd.DataFrame()
-
-    figure_dir = run_dir / "figures"
-    figure_dir.mkdir(parents=True, exist_ok=True)
-
-    positions = np.arange(len(utility))
-    width = 0.36
-    fig, ax = plt.subplots(figsize=(max(10, len(utility) * 1.1), 5.5))
-    ax.bar(positions - width / 2, utility["retained_accuracy"], width, label="Retained accuracy")
-    ax.bar(positions + width / 2, utility["forgotten_accuracy"], width, label="Forgotten accuracy")
-    ax.set_xticks(positions, utility["method"], rotation=35, ha="right")
-    ax.set_ylim(0.0, 1.0)
-    ax.set_ylabel("Accuracy")
-    ax.legend()
-    fig.tight_layout()
-    fig.savefig(figure_dir / "retained_forgotten_accuracy.png", dpi=220)
-    plt.close(fig)
-
-    fig, ax = plt.subplots(figsize=(max(10, len(mia) * 1.1), 5.5))
-    ax.bar(positions - width / 2, mia["mia_confidence_auc"], width, label="Confidence MIA")
-    ax.bar(positions + width / 2, mia["mia_learned_auc"], width, label="Learned MIA")
-    ax.axhline(0.5, linestyle="--", linewidth=1.0)
-    ax.set_xticks(positions, mia["method"], rotation=35, ha="right")
-    ax.set_ylim(0.45, 1.0)
-    ax.set_ylabel("ROC-AUC")
-    ax.legend()
-    fig.tight_layout()
-    fig.savefig(figure_dir / "membership_inference_auc.png", dpi=220)
-    plt.close(fig)
-
-    fig, ax = plt.subplots(figsize=(max(10, len(utility) * 1.1), 5.5))
-    ax.bar(positions - width / 2, utility["ece_15"], width, label="ECE")
-    ax.bar(positions + width / 2, utility["brier"], width, label="Brier")
-    ax.set_xticks(positions, utility["method"], rotation=35, ha="right")
-    ax.set_ylabel("Calibration error")
-    ax.legend()
-    fig.tight_layout()
-    fig.savefig(figure_dir / "calibration_metrics.png", dpi=220)
-    plt.close(fig)
-
-    if not representation.empty and "cka_to_retrained" in representation.columns:
-        positions_rep = np.arange(len(representation))
-        fig, ax = plt.subplots(figsize=(max(10, len(representation) * 1.1), 5.5))
-        ax.bar(positions_rep - width / 2, representation["cka_to_original"], width, label="CKA to original")
-        ax.bar(positions_rep + width / 2, representation["cka_to_retrained"], width, label="CKA to retrained")
-        ax.set_xticks(positions_rep, representation["method"], rotation=35, ha="right")
-        ax.set_ylim(0.0, 1.0)
-        ax.set_ylabel("Linear CKA")
-        ax.legend()
-        fig.tight_layout()
-        fig.savefig(figure_dir / "representation_cka.png", dpi=220)
-        plt.close(fig)

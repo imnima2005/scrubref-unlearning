@@ -27,7 +27,6 @@ def estimate_fisher_diagonal(
         batch_count += 1
     return [value / max(batch_count, 1) for value in fisher]
 
-
 def ssd_baseline(
     original: tf.keras.Model,
     split: UnlearningSplit,

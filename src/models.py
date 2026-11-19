@@ -1,3 +1,7 @@
+import tensorflow as tf
+from typing import Dict, List, Tuple
+from pathlib import Path
+
 def residual_block(x: tf.Tensor, filters: int, stride: int, name: str) -> tf.Tensor:
     shortcut = x
     x = tf.keras.layers.Conv2D(filters, 3, strides=stride, padding="same", use_bias=False, name=f"{name}_conv1")(x)
@@ -10,7 +14,6 @@ def residual_block(x: tf.Tensor, filters: int, stride: int, name: str) -> tf.Ten
         shortcut = tf.keras.layers.BatchNormalization(name=f"{name}_proj_bn")(shortcut)
     x = tf.keras.layers.Add(name=f"{name}_add")([x, shortcut])
     return tf.keras.layers.ReLU(name=f"{name}_out")(x)
-
 
 def build_resnet18(input_shape: Tuple[int, int, int], num_classes: int) -> tf.keras.Model:
     inputs = tf.keras.Input(shape=input_shape, name="image")
@@ -31,12 +34,10 @@ def build_resnet18(input_shape: Tuple[int, int, int], num_classes: int) -> tf.ke
     outputs = tf.keras.layers.Dense(num_classes, activation=None, dtype="float32", name="classifier")(x)
     return tf.keras.Model(inputs, outputs, name="resnet18_scrubref")
 
-
 def custom_objects() -> Dict[str, object]:
     return {
         "preprocess_input": tf.keras.applications.efficientnet.preprocess_input,
     }
-
 
 def clone_architecture(model: tf.keras.Model) -> tf.keras.Model:
     tf.keras.utils.get_custom_objects().update(custom_objects())
@@ -51,19 +52,16 @@ def clone_architecture(model: tf.keras.Model) -> tf.keras.Model:
                 "or remove unsupported Lambda layers before running the revision pipeline."
             ) from second_error
 
-
 def clone_with_weights(model: tf.keras.Model) -> tf.keras.Model:
     cloned = clone_architecture(model)
     cloned.set_weights(model.get_weights())
     return cloned
-
 
 def fresh_clone(model: tf.keras.Model, initial_weights_path: str = "") -> tf.keras.Model:
     cloned = clone_architecture(model)
     if initial_weights_path and Path(initial_weights_path).exists():
         cloned.load_weights(initial_weights_path)
     return cloned
-
 
 def output_to_logits(output: tf.Tensor, output_is_logits: bool) -> tf.Tensor:
     output = tf.cast(output, tf.float32)
@@ -72,13 +70,9 @@ def output_to_logits(output: tf.Tensor, output_is_logits: bool) -> tf.Tensor:
     probabilities = tf.clip_by_value(output, 1e-7, 1.0)
     return tf.math.log(probabilities)
 
-
 def output_to_probs(output: tf.Tensor, output_is_logits: bool, temperature: float = 1.0) -> tf.Tensor:
     logits = output_to_logits(output, output_is_logits) / temperature
     return tf.nn.softmax(logits, axis=-1)
-
-
-
 
 def leaf_layers(model: tf.keras.Model) -> List[tf.keras.layers.Layer]:
     result: List[tf.keras.layers.Layer] = []
@@ -89,7 +83,6 @@ def leaf_layers(model: tf.keras.Model) -> List[tf.keras.layers.Layer]:
             result.append(layer)
     return result
 
-
 def model_containers(model: tf.keras.Model) -> List[tf.keras.Model]:
     containers = [model]
     for layer in model.layers:
@@ -97,18 +90,15 @@ def model_containers(model: tf.keras.Model) -> List[tf.keras.Model]:
             containers.extend(model_containers(layer))
     return containers
 
-
 def classifier_layer(model: tf.keras.Model, num_classes: int) -> tf.keras.layers.Dense:
     candidates = [layer for layer in leaf_layers(model) if isinstance(layer, tf.keras.layers.Dense) and layer.units == num_classes]
     if not candidates:
         raise ValueError(f"No Dense classifier with {num_classes} units was found.")
     return candidates[-1]
 
-
 def build_feature_model(model: tf.keras.Model, num_classes: int) -> tf.keras.Model:
     classifier = classifier_layer(model, num_classes)
     return tf.keras.Model(model.inputs, classifier.input, name=f"{model.name}_feature_model")
-
 
 def set_all_trainable(model: tf.keras.Model, trainable: bool = True, freeze_batch_norm: bool = False) -> None:
     for container in model_containers(model):
@@ -118,7 +108,6 @@ def set_all_trainable(model: tf.keras.Model, trainable: bool = True, freeze_batc
             layer.trainable = False
         else:
             layer.trainable = trainable
-
 
 def set_tail_trainable(model: tf.keras.Model, num_classes: int, tail_weight_layers: int) -> List[str]:
     for container in model_containers(model):

@@ -1,3 +1,15 @@
+import tarfile
+import urllib.request
+from dataclasses import dataclass
+from pathlib import Path
+from typing import List, Sequence, Tuple, Union
+
+import numpy as np
+import tensorflow as tf
+from sklearn.model_selection import train_test_split
+from src.config import ExperimentConfig
+
+
 ArrayLike = Union[np.ndarray, Sequence[str]]
 
 @dataclass
@@ -51,7 +63,6 @@ def ensure_imagewoof(root: str) -> Path:
         tar.extractall(root_path)
     return dataset_dir
 
-
 def list_directory_split(split_dir: Path, class_names: List[str]) -> Tuple[np.ndarray, np.ndarray]:
     paths: List[str] = []
     labels: List[int] = []
@@ -62,7 +73,6 @@ def list_directory_split(split_dir: Path, class_names: List[str]) -> Tuple[np.nd
         paths.extend(str(p) for p in files)
         labels.extend([class_id] * len(files))
     return np.asarray(paths, dtype=str), np.asarray(labels, dtype=np.int64)
-
 
 def load_directory_bundle(name: str, root: str, image_size: Tuple[int, int]) -> DataBundle:
     root_path = Path(root)
@@ -85,7 +95,6 @@ def load_directory_bundle(name: str, root: str, image_size: Tuple[int, int]) -> 
         image_size=image_size,
         path_mode=True,
     )
-
 
 def load_dataset(cfg: ExperimentConfig) -> DataBundle:
     if cfg.dataset == "cifar10":
@@ -181,7 +190,6 @@ def load_dataset(cfg: ExperimentConfig) -> DataBundle:
         return load_directory_bundle("imagenet100", cfg.imagenet100_root, (224, 224))
     raise ValueError(f"Unsupported dataset: {cfg.dataset}")
 
-
 def make_unlearning_split(
     bundle: DataBundle,
     forget_classes: Sequence[int],
@@ -227,7 +235,6 @@ def make_unlearning_split(
     )
     return split
 
-
 def decode_item(item: tf.Tensor, image_size: Tuple[int, int], path_mode: bool) -> tf.Tensor:
     if path_mode:
         raw = tf.io.read_file(item)
@@ -239,7 +246,6 @@ def decode_item(item: tf.Tensor, image_size: Tuple[int, int], path_mode: bool) -
             image = tf.image.resize(image, image_size, antialias=True)
     image.set_shape(image_size + (3,))
     return tf.cast(image, tf.float32)
-
 
 def augment_image(image: tf.Tensor, image_size: Tuple[int, int]) -> tf.Tensor:
     image = tf.image.random_flip_left_right(image)
@@ -254,7 +260,6 @@ def augment_image(image: tf.Tensor, image_size: Tuple[int, int]) -> tf.Tensor:
     image = tf.image.random_brightness(image, max_delta=8.0)
     image = tf.image.random_contrast(image, lower=0.9, upper=1.1)
     return tf.clip_by_value(image, 0.0, 255.0)
-
 
 def make_dataset(
     items: np.ndarray,
@@ -299,7 +304,6 @@ def make_dataset(
     ds = ds.map(mapper, num_parallel_calls=CFG.data_parallel_calls)
     ds = ds.batch(batch_size, drop_remainder=False)
     return ds.prefetch(CFG.data_prefetch_batches)
-
 
 def materialize_items(
     items: np.ndarray,

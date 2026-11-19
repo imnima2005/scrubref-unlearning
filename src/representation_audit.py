@@ -1,3 +1,37 @@
+from typing import Dict, List, Tuple, Sequence
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+import tensorflow as tf
+import matplotlib.pyplot as plt
+
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score
+from src.data_loader import (
+    DataBundle,
+    UnlearningSplit,
+    make_dataset
+)
+
+from src.config import ExperimentConfig
+
+from src.utils import (
+    method_model_path,
+    reset_tensorflow,
+    load_saved_model,
+    release_memory
+)
+
+from src.metrics import (
+    predict_probabilities,
+)
+
+from src.models import (
+    build_feature_model
+)
+
 def run_representation_audit(
     cfg: ExperimentConfig,
     run_dir: Path,
@@ -147,7 +181,7 @@ def run_representation_audit(
     pd.DataFrame(rows).to_csv(run_dir / "representation_metrics.csv", index=False)
     del original_features, retrained_features, retrained_probs, labels, train_idx, test_idx, cka_idx
     release_memory(clear_session=True)
-# Missing representation audit helper definitions
+
 def stratified_indices(labels: np.ndarray, limit: int, seed: int) -> np.ndarray:
     rng = np.random.default_rng(seed)
     unique_classes = np.unique(labels)
