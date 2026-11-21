@@ -12,7 +12,7 @@ from dataclasses import asdict
 from datetime import datetime, timezone
 
 from src.models import custom_objects
-from src.config_copy import ExperimentConfig
+from src.config import ExperimentConfig
 
 def file_md5(path: Path, chunk_size: int = 8 * 1024 * 1024) -> str:
     digest = hashlib.md5()

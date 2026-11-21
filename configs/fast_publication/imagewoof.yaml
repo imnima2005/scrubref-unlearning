@@ -6,7 +6,7 @@ results_root: ./results
 checkpoint_paths:
   cifar10: "./checkpoints/cifar10_cnn_best.keras"
   cifar100: "./checkpoints/cifar100_efficientnet_85.keras"
-  imagewoof: "./checkpoints/imagewoof_effb0_fixed.keras"
+  imagewoof: "./checkpoints/imagewoof_trained_original.keras"
   imagenet100: "./checkpoints/imagenet100_model.keras"
 
 initial_weights_paths:
@@ -40,13 +40,15 @@ data_prefetch_batches: 2
 data_private_threadpool_size: 4
 shuffle_buffer: 5000
 
-retrain_epochs: 20
+original_epochs: 3 #100
+retrain_epochs: 3 # 3
 baseline_epochs: 3
 scrub_epochs: 3
 refine_epochs: 3
 clamp_epochs: 1
 early_stopping_patience: 4
 
+original_lr: 1.0e-3
 retrain_lr: 1.0e-3
 baseline_lr: 1.0e-3
 scrub_lr: 2.0e-3
