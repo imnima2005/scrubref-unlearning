@@ -2,11 +2,17 @@ from pathlib import Path
 import hashlib
 import ctypes,gc,os,random
 import json
-import numpy as np
-import tensorflow as tf
 from typing import Dict
 
+import tensorflow as tf
+import pandas as pd
+import numpy as np
+
+from dataclasses import asdict
+from datetime import datetime, timezone
+
 from src.models import custom_objects
+from src.config_copy import ExperimentConfig
 
 def file_md5(path: Path, chunk_size: int = 8 * 1024 * 1024) -> str:
     digest = hashlib.md5()
@@ -32,15 +38,33 @@ def set_global_determinism(seed: int) -> None:
     except Exception:
         pass
 
+# def release_memory(clear_session: bool = True) -> None:
+#     """Release TensorFlow and Python memory where possible."""
+#     if clear_session:
+#         tf.keras.backend.clear_session()
+
+#     gc.collect()
+
+#     try:
+#         ctypes.CDLL("libc.so.6").malloc_trim(0)
+#     except Exception:
+#         pass
+
 def release_memory(clear_session: bool = True) -> None:
-    """Release TensorFlow and Python memory where possible."""
+    """Release Python, TensorFlow graph, and allocator caches between stages."""
     if clear_session:
-        tf.keras.backend.clear_session()
-
+        try:
+            tf.keras.backend.clear_session()
+        except Exception:
+            pass
     gc.collect()
-
     try:
         ctypes.CDLL("libc.so.6").malloc_trim(0)
+    except Exception:
+        pass
+    gc.collect()
+    try:
+        tf.config.experimental.reset_memory_stats("GPU:0")
     except Exception:
         pass
 
@@ -68,3 +92,53 @@ def save_json(path: Path, data: Dict[str, object]) -> None:
 
 def load_saved_model(path: Path) -> tf.keras.Model:
     return tf.keras.models.load_model(path, custom_objects=custom_objects(), compile=False, safe_mode=False)
+
+##### Specific to ImageWoof notebook
+def utc_now() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+def atomic_write_json(path: Path, payload: Dict[str, object]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    temporary.write_text(json.dumps(payload, indent=2, default=str), encoding="utf-8")
+    temporary.replace(path)
+
+
+def atomic_write_dataframe(path: Path, frame: pd.DataFrame) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    frame.to_csv(temporary, index=False)
+    temporary.replace(path)
+
+
+def config_fingerprint(cfg: ExperimentConfig) -> str:
+    payload = asdict(cfg)
+    payload.pop("results_root", None)
+    payload.pop("data_root", None)
+    encoded = json.dumps(payload, sort_keys=True, default=str).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()[:12]
+
+
+def experiment_dir(cfg: ExperimentConfig) -> Path:
+    return Path(cfg.results_root) / cfg.dataset / f"{cfg.run_mode}_{config_fingerprint(cfg)}"
+
+
+def seed_dir(cfg: ExperimentConfig, seed: int) -> Path:
+    return experiment_dir(cfg) / f"seed_{seed}"
+
+
+def stage_status_path(cfg: ExperimentConfig, seed: int, stage: str) -> Path:
+    return seed_dir(cfg, seed) / "status" / f"{stage}.json"
+
+
+def set_stage_status(cfg: ExperimentConfig, seed: int, stage: str, state: str, **extra: object) -> None:
+    payload = {
+        "dataset": cfg.dataset,
+        "seed": seed,
+        "stage": stage,
+        "state": state,
+        "updated_at": utc_now(),
+        "config_fingerprint": config_fingerprint(cfg),
+        **extra,
+    }
+    atomic_write_json(stage_status_path(cfg, seed, stage), payload)

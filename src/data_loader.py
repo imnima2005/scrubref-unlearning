@@ -324,3 +324,46 @@ def materialize_items(
         images_out.append(xb.numpy())
         labels_out.append(yb.numpy())
     return np.concatenate(images_out), np.concatenate(labels_out)
+
+# Specific to ImageWoof notebook
+_RUNTIME_BATCH_MESSAGES: set = set()
+
+def effective_runtime_batch_size(
+    bundle: DataBundle,
+    requested_batch_size: int,
+    training: bool,
+) -> int:
+    """Return a conservative batch size without changing the experiment fingerprint."""
+    requested = max(1, int(requested_batch_size))
+    method = globals().get("ACTIVE_METHOD_NAME")
+    base_name = str(bundle.name).replace("_materialized", "")
+
+    if base_name == "cifar100":
+        if training:
+            cap = 4 if method in {"unsir", "bad_teacher", "scrub"} else 8
+        else:
+            cap = 8
+    elif base_name in {"imagewoof", "imagenet100"}:
+        if training:
+            cap = 2 if method in {"unsir", "bad_teacher", "scrub"} else 4
+        else:
+            cap = 4
+    elif base_name == "cifar10":
+        if training:
+            cap = 16 if method in {"unsir", "bad_teacher", "scrub"} else 32
+        else:
+            cap = 64
+    else:
+        cap = 4 if training else 8
+
+    effective = min(requested, cap)
+    message_key = (base_name, method, requested, effective, training)
+    if effective != requested and message_key not in _RUNTIME_BATCH_MESSAGES:
+        phase = "training" if training else "evaluation"
+        method_text = f", method={method}" if method else ""
+        print(
+            f"Runtime GPU safety cap: {base_name} {phase} batch "
+            f"{requested} -> {effective}{method_text}"
+        )
+        _RUNTIME_BATCH_MESSAGES.add(message_key)
+    return effective

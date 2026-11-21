@@ -1,0 +1,123 @@
+run_mode: fast_publication
+dataset: imagewoof
+data_root: ./data
+results_root: ./results
+
+checkpoint_paths:
+  cifar10: "./checkpoints/cifar10_cnn_best.keras"
+  cifar100: "./checkpoints/cifar100_efficientnet_85.keras"
+  imagewoof: "./checkpoints/imagewoof_effb0_fixed.keras"
+  imagenet100: "./checkpoints/imagenet100_model.keras"
+
+initial_weights_paths:
+  cifar10: ""
+  cifar100: ""
+  imagewoof: ""
+  imagenet100: ""
+
+imagenet100_root: "./data/imagenet100"
+
+forget_classes_by_dataset:
+  cifar10:
+  - 5
+  cifar100:
+  - 64
+  imagewoof:
+  - 0
+  imagenet100:
+  - 0
+
+seeds:
+- 42
+
+output_is_logits: null
+require_original_checkpoint: true
+
+batch_size: 16
+eval_batch_size: 16
+data_parallel_calls: 4
+data_prefetch_batches: 2
+data_private_threadpool_size: 4
+shuffle_buffer: 5000
+
+retrain_epochs: 20
+baseline_epochs: 3
+scrub_epochs: 3
+refine_epochs: 3
+clamp_epochs: 1
+early_stopping_patience: 4
+
+retrain_lr: 1.0e-3
+baseline_lr: 1.0e-3
+scrub_lr: 2.0e-3
+refine_lr: 1.0e-3
+
+proxy_count: 128
+proxy_steps: 40
+proxy_min_steps: 10
+proxy_check_every: 5
+proxy_target_probability: 0.90
+proxy_batch_size: 8
+proxy_lr: 1.0
+proxy_tv_weight: 2.0e-5
+proxy_l2_weight: 1.0e-6
+
+mixup_alpha: 0.2
+kd_temperature: 3.0
+
+retain_ce_weight: 1.0
+retain_kd_weight: 0.8
+retain_feature_weight: 0.2
+
+forget_output_weight: 1.0
+forget_entropy_weight: 0.15
+forget_feature_weight: 0.5
+
+head_tail_layers: 0
+representation_tail_layers: 8
+gradient_clip_norm: 5.0
+clamp_threshold: 0.05
+
+enable_main_method_clamp: false
+enable_main_method_logit_surgery: false
+logit_surgery_shift: 6.0
+
+retrain_validation_fraction: 0.1
+probe_train_limit: 3000
+probe_test_limit: 1500
+cka_sample_limit: 500
+mia_attack_repeats: 3
+
+ssd_fisher_batches: 10
+ssd_selection_weighting: 10.0
+ssd_dampening_constant: 1.0
+
+unsir_noise_steps: 40
+unsir_impair_lr: 0.02
+unsir_repair_lr: 0.01
+
+enabled_methods:
+  - original
+  - retrained
+  - logit_clamp
+  - retain_finetune
+  - scrubref_head
+  - scrubref_rep
+  - unsir
+  - bad_teacher
+  - scrub
+  - ssd
+
+representation_methods:
+  - original
+  - retrained
+  - logit_clamp
+  - scrubref_head
+  - scrubref_rep
+  - unsir
+  - bad_teacher
+  - scrub
+  - ssd
+
+save_models: true
+download_imagewoof: true

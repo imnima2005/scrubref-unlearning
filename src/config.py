@@ -34,6 +34,7 @@ class ExperimentConfig:
 
     seeds: Tuple[int, ...] = (42, 52, 62)
     output_is_logits: Optional[bool] = None
+    require_original_checkpoint: bool = False # Specific to ImageWoof notebook
     fallback_architecture: str = "resnet18"
 
     batch_size: int = 64
@@ -42,12 +43,14 @@ class ExperimentConfig:
     data_prefetch_batches: int = 1
     data_private_threadpool_size: int = 2
     shuffle_buffer: int = 4096
+
     original_epochs: int = 100
     retrain_epochs: int = 100
     baseline_epochs: int = 8
     scrub_epochs: int = 6
     refine_epochs: int = 8
     clamp_epochs: int = 1
+    early_stopping_patience: int = 4 # Specific to ImageWoof notebook
 
     original_lr: float = 1e-3
     retrain_lr: float = 1e-3
@@ -57,6 +60,9 @@ class ExperimentConfig:
 
     proxy_count: int = 1024
     proxy_steps: int = 250
+    proxy_min_steps: int = 10 # Specific to ImageWoof notebook
+    proxy_check_every: int = 5 # Specific to ImageWoof notebook
+    proxy_target_probability: float = 0.90 # Specific to ImageWoof notebook
     proxy_batch_size: int = 32
     proxy_lr: float = 1.0
     proxy_tv_weight: float = 2e-5
@@ -152,19 +158,32 @@ class ExperimentConfig:
             self.seeds = (42,)
             self.original_epochs = min(self.original_epochs, 3)
             self.retrain_epochs = min(self.retrain_epochs, 3)
-            self.baseline_epochs = min(self.baseline_epochs, 2)
-            self.scrub_epochs = min(self.scrub_epochs, 2)
-            self.refine_epochs = min(self.refine_epochs, 2)
-            self.proxy_count = min(self.proxy_count, 128)
-            self.proxy_steps = min(self.proxy_steps, 20)
-            self.probe_train_limit = min(self.probe_train_limit, 3000)
-            self.probe_test_limit = min(self.probe_test_limit, 2000)
-            self.cka_sample_limit = min(self.cka_sample_limit, 750)
-            self.ssd_fisher_batches = min(self.ssd_fisher_batches, 5)
-            self.unsir_noise_steps = min(self.unsir_noise_steps, 15)
-        elif self.run_mode != "publication":
-            raise ValueError("run_mode must be 'publication' or 'debug'.")
+            self.baseline_epochs = min(self.baseline_epochs, 1)
+            self.scrub_epochs = min(self.scrub_epochs, 1)
+            self.refine_epochs = min(self.refine_epochs, 1)
+
+            self.proxy_count = min(self.proxy_count, 64)
+            self.proxy_steps = min(self.proxy_steps, 10)
+            self.proxy_min_steps = min(self.proxy_min_steps, 5)
+
+            self.probe_train_limit = min(self.probe_train_limit, 1000)
+            self.probe_test_limit = min(self.probe_test_limit, 750)
+            self.cka_sample_limit = min(self.cka_sample_limit, 250)
+
+            self.ssd_fisher_batches = min(self.ssd_fisher_batches, 3)
+            self.unsir_noise_steps = min(self.unsir_noise_steps, 8)
+
+        elif self.run_mode in {"publication", "fast_publication"}:
+            pass
+
+        else:
+            raise ValueError(
+                "run_mode must be 'publication', "
+                "'fast_publication', or 'debug'."
+            )
+
         return self
+
 
 
 CFG = ExperimentConfig().apply_mode()

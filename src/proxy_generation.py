@@ -36,6 +36,7 @@ def generate_class_proxies(
             images = cached["images"].astype(np.float32, copy=False)
             labels = cached["labels"].astype(np.int64, copy=False)
             metadata = json.loads(str(cached["metadata"].item()))
+            print("Reusing completed proxies:", cache_path)
         return images, labels, metadata
 
     set_global_determinism(seed)
