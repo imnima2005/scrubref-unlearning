@@ -109,4 +109,4 @@ If you use this repository, please cite the published paper. Citation metadata i
 
 ## License
 
-See [`License`](License).
+See [`License`](LICENSE).
