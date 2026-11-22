@@ -21,16 +21,17 @@ from src.models import (
     output_to_probs
 )
 
-# def categorical_kl(p: tf.Tensor, q: tf.Tensor) -> tf.Tensor:
-#     p = tf.clip_by_value(p, 1e-7, 1.0)
-#     q = tf.clip_by_value(q, 1e-7, 1.0)
-#     return tf.reduce_mean(tf.reduce_sum(p * tf.math.log(p / q), axis=-1))
-
+# =============================================================================
+# Loss & Divergence Utilities
+# =============================================================================
 def categorical_kl(target: tf.Tensor, prediction: tf.Tensor) -> tf.Tensor:
     target = tf.clip_by_value(target, 1e-7, 1.0)
     prediction = tf.clip_by_value(prediction, 1e-7, 1.0)
     return tf.reduce_mean(tf.reduce_sum(target * (tf.math.log(target) - tf.math.log(prediction)), axis=-1))
 
+# =============================================================================
+# ScrubRef Core Unlearning Engine
+# =============================================================================
 def scrubref_train(
     original: tf.keras.Model,
     split: UnlearningSplit,

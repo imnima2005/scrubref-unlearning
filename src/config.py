@@ -12,10 +12,10 @@ class ExperimentConfig:
     results_root: str = "./results"
 
     checkpoint_paths: Dict[str, str] = field(default_factory=lambda: {
-        "cifar10": "./checkpoints/cifar10_cnn_best.keras",
-        "cifar100": "./checkpoints/cifar100_efficientnet_85.keras",
-        "imagewoof": "./checkpoints/imagewoof_effb0_fixed.keras",
-        "imagenet100": "./checkpoints/imagenet100_model.keras",
+        "cifar10": "./checkpoints/cifar10_trained_original.keras",
+        "cifar100": "./checkpoints/cifar100_trained_original.keras",
+        "imagewoof": "./checkpoints/imagewoof_trained_original.keras",
+        "imagenet100": "./checkpoints/imagenet100_model.keras"
     })
     initial_weights_paths: Dict[str, str] = field(default_factory=lambda: {
         "cifar10": "",

@@ -18,6 +18,9 @@ from src.models import (
 )
 from src.training import train_supervised
 
+# =============================================================================
+# Simple Unlearning Baselines
+# =============================================================================
 def logit_clamp_baseline(
     original: tf.keras.Model,
     bundle: DataBundle,

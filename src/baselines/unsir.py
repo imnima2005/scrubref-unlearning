@@ -19,6 +19,9 @@ from src.training import (
 
 from src.proxy_generation import generate_unsir_error_maximizing_noise
 
+# =============================================================================
+# UNSIR Baseline
+# =============================================================================
 def unsir_baseline(
     original: tf.keras.Model,
     split: UnlearningSplit,

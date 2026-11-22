@@ -18,10 +18,16 @@ from src.models import (
     output_to_probs
 )
 
+# =============================================================================
+# Proxy Target Utilities
+# =============================================================================
 def balanced_proxy_targets(forget_classes: Sequence[int], count: int) -> np.ndarray:
     classes = np.asarray(forget_classes, dtype=np.int64)
     return np.resize(classes, count)
 
+# =============================================================================
+# Class Proxy Generation Pipeline
+# =============================================================================
 def generate_class_proxies(
     teacher: tf.keras.Model,
     bundle: DataBundle,
@@ -86,6 +92,9 @@ def generate_class_proxies(
     np.savez_compressed(cache_path, images=proxy_images, labels=proxy_labels, metadata=json.dumps(metadata))
     return proxy_images, proxy_labels, metadata
 
+# =============================================================================
+# UNSIR Error-Maximizing Noise Generation
+# =============================================================================
 def generate_unsir_error_maximizing_noise(
     teacher: tf.keras.Model,
     bundle: DataBundle,

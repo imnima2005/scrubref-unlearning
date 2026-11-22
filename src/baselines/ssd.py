@@ -14,7 +14,9 @@ from src.models import (
     clone_with_weights
 )
 
-
+# =============================================================================
+# SSD Baseline (Selective Synaptic Damping)
+# =============================================================================
 def estimate_fisher_diagonal(
     model: tf.keras.Model,
     items: np.ndarray,

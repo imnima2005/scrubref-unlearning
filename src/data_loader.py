@@ -1,3 +1,5 @@
+# Data loading and preprocessing utilities for ScrubRef-Rep.
+
 import tarfile
 import urllib.request
 from dataclasses import dataclass
@@ -7,11 +9,14 @@ from typing import List, Sequence, Tuple, Union
 import numpy as np
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
-from src.config import ExperimentConfig
 
+from src.config import ExperimentConfig
 
 ArrayLike = Union[np.ndarray, Sequence[str]]
 
+# =============================================================================
+# Data structures
+# =============================================================================
 @dataclass
 class DataBundle:
     name: str
@@ -45,7 +50,9 @@ class UnlearningSplit:
     forget_test_items: np.ndarray
     forget_test_labels: np.ndarray
 
-
+# =============================================================================
+# Dataset loading helpers
+# =============================================================================
 def ensure_imagewoof(root: str) -> Path:
     root_path = Path(root)
     dataset_dir = root_path / "imagewoof2-320"
@@ -189,6 +196,10 @@ def load_dataset(cfg: ExperimentConfig) -> DataBundle:
         return load_directory_bundle("imagenet100", cfg.imagenet100_root, (224, 224))
     raise ValueError(f"Unsupported dataset: {cfg.dataset}")
 
+
+# =============================================================================
+# Unlearning split
+# =============================================================================
 def make_unlearning_split(
     bundle: DataBundle,
     forget_classes: Sequence[int],
@@ -234,6 +245,9 @@ def make_unlearning_split(
     )
     return split
 
+# =============================================================================
+# Image preprocessing
+# =============================================================================
 def decode_item(item: tf.Tensor, image_size: Tuple[int, int], path_mode: bool) -> tf.Tensor:
     if path_mode:
         raw = tf.io.read_file(item)
@@ -260,6 +274,9 @@ def augment_image(image: tf.Tensor, image_size: Tuple[int, int]) -> tf.Tensor:
     image = tf.image.random_contrast(image, lower=0.9, upper=1.1)
     return tf.clip_by_value(image, 0.0, 255.0)
 
+# =============================================================================
+# TensorFlow dataset pipeline
+# =============================================================================
 def make_dataset(
     items: np.ndarray,
     labels: np.ndarray,
@@ -323,46 +340,3 @@ def materialize_items(
         images_out.append(xb.numpy())
         labels_out.append(yb.numpy())
     return np.concatenate(images_out), np.concatenate(labels_out)
-
-# Specific to ImageWoof notebook
-_RUNTIME_BATCH_MESSAGES: set = set()
-
-def effective_runtime_batch_size(
-    bundle: DataBundle,
-    requested_batch_size: int,
-    training: bool,
-) -> int:
-    """Return a conservative batch size without changing the experiment fingerprint."""
-    requested = max(1, int(requested_batch_size))
-    method = globals().get("ACTIVE_METHOD_NAME")
-    base_name = str(bundle.name).replace("_materialized", "")
-
-    if base_name == "cifar100":
-        if training:
-            cap = 4 if method in {"unsir", "bad_teacher", "scrub"} else 8
-        else:
-            cap = 8
-    elif base_name in {"imagewoof", "imagenet100"}:
-        if training:
-            cap = 2 if method in {"unsir", "bad_teacher", "scrub"} else 4
-        else:
-            cap = 4
-    elif base_name == "cifar10":
-        if training:
-            cap = 16 if method in {"unsir", "bad_teacher", "scrub"} else 32
-        else:
-            cap = 64
-    else:
-        cap = 4 if training else 8
-
-    effective = min(requested, cap)
-    message_key = (base_name, method, requested, effective, training)
-    if effective != requested and message_key not in _RUNTIME_BATCH_MESSAGES:
-        phase = "training" if training else "evaluation"
-        method_text = f", method={method}" if method else ""
-        print(
-            f"Runtime GPU safety cap: {base_name} {phase} batch "
-            f"{requested} -> {effective}{method_text}"
-        )
-        _RUNTIME_BATCH_MESSAGES.add(message_key)
-    return effective

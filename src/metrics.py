@@ -14,24 +14,9 @@ from sklearn.pipeline import make_pipeline
 from src.models import output_to_probs
 from src.data_loader import make_dataset, DataBundle, UnlearningSplit
 
-def predict_probabilities(
-    model: tf.keras.Model,
-    items: np.ndarray,
-    labels: np.ndarray,
-    bundle: DataBundle,
-    output_is_logits: bool,
-    batch_size: int,
-    seed: int,
-) -> Tuple[np.ndarray, np.ndarray]:
-    ds = make_dataset(items, labels, bundle, batch_size, False, False, False, seed)
-    probabilities: List[np.ndarray] = []
-    labels_out: List[np.ndarray] = []
-    for xb, yb in ds:
-        output = model(xb, training=False)
-        probabilities.append(output_to_probs(output, output_is_logits).numpy())
-        labels_out.append(yb.numpy())
-    return np.concatenate(probabilities), np.concatenate(labels_out)
-
+# =============================================================================
+# Calibration Metrics
+# =============================================================================
 def expected_calibration_error(y_true: np.ndarray, probs: np.ndarray, bins: int = 15) -> float:
     confidences = probs.max(axis=1)
     predictions = probs.argmax(axis=1)
@@ -48,6 +33,9 @@ def brier_multiclass(y_true: np.ndarray, probs: np.ndarray, num_classes: int) ->
     one_hot = np.eye(num_classes, dtype=np.float64)[y_true]
     return float(np.mean(np.sum((probs - one_hot) ** 2, axis=1)))
 
+# =============================================================================
+# Prediction and Utility Metrics
+# =============================================================================
 def per_class_accuracy(y_true: np.ndarray, y_pred: np.ndarray, num_classes: int) -> np.ndarray:
     result = np.full(num_classes, np.nan, dtype=np.float64)
     for class_id in range(num_classes):
@@ -90,6 +78,27 @@ def evaluate_utility(
         ),
     }
     return metrics, per_class_accuracy(y_true, y_pred, bundle.num_classes)
+
+# =============================================================================
+# Membership Inference Evaluation (MIA)
+# =============================================================================
+def predict_probabilities(
+    model: tf.keras.Model,
+    items: np.ndarray,
+    labels: np.ndarray,
+    bundle: DataBundle,
+    output_is_logits: bool,
+    batch_size: int,
+    seed: int,
+) -> Tuple[np.ndarray, np.ndarray]:
+    ds = make_dataset(items, labels, bundle, batch_size, False, False, False, seed)
+    probabilities: List[np.ndarray] = []
+    labels_out: List[np.ndarray] = []
+    for xb, yb in ds:
+        output = model(xb, training=False)
+        probabilities.append(output_to_probs(output, output_is_logits).numpy())
+        labels_out.append(yb.numpy())
+    return np.concatenate(probabilities), np.concatenate(labels_out)
 
 def entropy_scores(probs: np.ndarray) -> np.ndarray:
     probs = np.clip(probs, 1e-7, 1.0 - 1e-7)
@@ -205,6 +214,9 @@ def evaluate_membership_inference(
         "mia_member_count": float(n),
     }
 
+# =============================================================================
+# Parameter and Runtime Statistics
+# =============================================================================
 def parameter_change_statistics(original: tf.keras.Model, changed: tf.keras.Model, tolerance: float = 1e-7) -> Dict[str, float]:
     original_weights = original.get_weights()
     changed_weights = changed.get_weights()

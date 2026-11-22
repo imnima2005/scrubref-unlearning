@@ -2,6 +2,9 @@ import tensorflow as tf
 from typing import Dict, List, Tuple
 from pathlib import Path
 
+# =============================================================================
+# Architecture & ResNet Components
+# =============================================================================
 def residual_block(x: tf.Tensor, filters: int, stride: int, name: str) -> tf.Tensor:
     shortcut = x
     x = tf.keras.layers.Conv2D(filters, 3, strides=stride, padding="same", use_bias=False, name=f"{name}_conv1")(x)
@@ -34,6 +37,9 @@ def build_resnet18(input_shape: Tuple[int, int, int], num_classes: int) -> tf.ke
     outputs = tf.keras.layers.Dense(num_classes, activation=None, dtype="float32", name="classifier")(x)
     return tf.keras.Model(inputs, outputs, name="resnet18_scrubref")
 
+# =============================================================================
+# Model Cloning, Serialization & State Utilities
+# =============================================================================
 def custom_objects() -> Dict[str, object]:
     return {
         "preprocess_input": tf.keras.applications.efficientnet.preprocess_input,
@@ -63,6 +69,9 @@ def fresh_clone(model: tf.keras.Model, initial_weights_path: str = "") -> tf.ker
         cloned.load_weights(initial_weights_path)
     return cloned
 
+# =============================================================================
+# Output Conversion & Logits/Probs Handling
+# =============================================================================
 def output_to_logits(output: tf.Tensor, output_is_logits: bool) -> tf.Tensor:
     output = tf.cast(output, tf.float32)
     if output_is_logits:
@@ -74,6 +83,9 @@ def output_to_probs(output: tf.Tensor, output_is_logits: bool, temperature: floa
     logits = output_to_logits(output, output_is_logits) / temperature
     return tf.nn.softmax(logits, axis=-1)
 
+# =============================================================================
+# Layer Inspection & Architecture Modification
+# =============================================================================
 def leaf_layers(model: tf.keras.Model) -> List[tf.keras.layers.Layer]:
     result: List[tf.keras.layers.Layer] = []
     for layer in model.layers:
@@ -100,6 +112,9 @@ def build_feature_model(model: tf.keras.Model, num_classes: int) -> tf.keras.Mod
     classifier = classifier_layer(model, num_classes)
     return tf.keras.Model(model.inputs, classifier.input, name=f"{model.name}_feature_model")
 
+# =============================================================================
+# Fine-Tuning & Trainability Control
+# =============================================================================
 def set_all_trainable(model: tf.keras.Model, trainable: bool = True, freeze_batch_norm: bool = False) -> None:
     for container in model_containers(model):
         container.trainable = True

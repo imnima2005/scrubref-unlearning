@@ -55,6 +55,9 @@ from src.metrics import (
     evaluate_utility,
 )
 
+# =============================================================================
+# Method Construction
+# =============================================================================
 def build_method(
     method: str,
     original: tf.keras.Model,
@@ -96,6 +99,9 @@ def build_method(
         return ssd_baseline(original, split, bundle, output_is_logits, cfg, seed), metadata
     raise ValueError(f"Unknown method: {method}")
 
+# =============================================================================
+# Per-Seed Experiment Pipeline
+# =============================================================================
 def run_seed(
     cfg: ExperimentConfig,
     seed: int,
@@ -250,6 +256,9 @@ def run_seed(
     release_memory(clear_session=True)
     return outputs
 
+# =============================================================================
+# Representation Audit Pipeline
+# =============================================================================
 def run_representation_audit(
     cfg: ExperimentConfig,
     run_dir: Path,

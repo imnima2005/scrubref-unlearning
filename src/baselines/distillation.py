@@ -18,6 +18,10 @@ from src.models import (
 from src.config import ExperimentConfig
 from src.scrubref import categorical_kl
 
+
+# =============================================================================
+# Knowledge Distillation Baselines
+# =============================================================================
 def bad_teacher_baseline(
     original: tf.keras.Model,
     split: UnlearningSplit,

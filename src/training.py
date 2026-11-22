@@ -16,7 +16,9 @@ from src.models import (
     custom_objects
 )
 
-
+# =============================================================================
+# Original Model Management (Load or Train)
+# =============================================================================
 def load_or_train_original(
     cfg: ExperimentConfig,
     bundle: DataBundle,
@@ -52,6 +54,9 @@ def load_or_train_original(
     output_is_logits = infer_output_is_logits(model, sample_x, cfg.output_is_logits)
     return model, output_is_logits, source
 
+# =============================================================================
+# Supervised Compilation & Training Routines
+# =============================================================================
 def compile_supervised(model: tf.keras.Model, output_is_logits: bool, learning_rate: float) -> None:
     model.compile(
         optimizer=tf.keras.optimizers.Adam(learning_rate),
@@ -91,6 +96,9 @@ def train_supervised(
     model.fit(train_ds, validation_data=validation_ds, epochs=epochs, verbose=2, callbacks=callbacks)
     return model
 
+# =============================================================================
+# Model Output Inference Utilities
+# =============================================================================
 def infer_output_is_logits(model: tf.keras.Model, sample_batch: tf.Tensor, override: Optional[bool]) -> bool:
     if override is not None:
         return bool(override)

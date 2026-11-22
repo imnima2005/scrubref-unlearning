@@ -32,6 +32,9 @@ from src.models import (
     build_feature_model
 )
 
+# =============================================================================
+# Representation Audit Pipeline
+# =============================================================================
 def run_representation_audit(
     cfg: ExperimentConfig,
     run_dir: Path,
@@ -182,6 +185,9 @@ def run_representation_audit(
     del original_features, retrained_features, retrained_probs, labels, train_idx, test_idx, cka_idx
     release_memory(clear_session=True)
 
+# =============================================================================
+# Deterministic Sampling Utilities
+# =============================================================================
 def stratified_indices(labels: np.ndarray, limit: int, seed: int) -> np.ndarray:
     rng = np.random.default_rng(seed)
     unique_classes = np.unique(labels)
@@ -194,6 +200,9 @@ def stratified_indices(labels: np.ndarray, limit: int, seed: int) -> np.ndarray:
             selected_indices.extend(chosen)
     return np.array(selected_indices, dtype=np.int64)
 
+# =============================================================================
+# Feature Extraction
+# =============================================================================
 def extract_features(model: tf.keras.Model, items: np.ndarray, labels: np.ndarray, bundle: DataBundle, batch_size: int, seed: int) -> Tuple[np.ndarray, np.ndarray]:
     feature_model = build_feature_model(model, bundle.num_classes)
     ds = make_dataset(items, labels, bundle, batch_size, False, False, False, seed)
@@ -204,6 +213,9 @@ def extract_features(model: tf.keras.Model, items: np.ndarray, labels: np.ndarra
         labels_out.append(yb.numpy())
     return np.concatenate(features), np.concatenate(labels_out)
 
+# =============================================================================
+# Representation Similarity Metrics
+# =============================================================================
 def linear_cka(X: np.ndarray, Y: np.ndarray) -> float:
     X = X - X.mean(axis=0)
     Y = Y - Y.mean(axis=0)
@@ -221,6 +233,9 @@ def jensen_shannon_divergence(P: np.ndarray, Q: np.ndarray) -> float:
     kl_qm = np.sum(Q * np.log(Q / M), axis=1)
     return float(np.mean(0.5 * (kl_pm + kl_qm)))
 
+# =============================================================================
+# Representation Probe Evaluation
+# =============================================================================
 def representation_probe_metrics(train_features: np.ndarray, train_labels: np.ndarray, test_features: np.ndarray, test_labels: np.ndarray, forget_classes: Sequence[int]) -> Dict[str, float]:
     # Simple linear probe audit implementation
     scaler = StandardScaler()
@@ -239,6 +254,9 @@ def representation_probe_metrics(train_features: np.ndarray, train_labels: np.nd
         "linear_probe_forgotten_accuracy": float(accuracy_score(test_labels[forget_mask], preds[forget_mask]))
     }
 
+# =============================================================================
+# Audit Figure Generation
+# =============================================================================
 def make_seed_figures(run_dir: Path) -> None:
     utility = pd.read_csv(run_dir / "utility_metrics.csv")
     mia = pd.read_csv(run_dir / "mia_metrics.csv")
