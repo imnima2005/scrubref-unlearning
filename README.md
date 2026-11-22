@@ -34,8 +34,8 @@ The supplied information does not specify which values map to which dataset. Ver
 ├── CITATION.cff
 ├── .gitignore
 ├── notebooks/
-│   ├── <publication notebook; numbered 01; exact filename to be confirmed>
-│   └── <fast-publication notebook; exact filename to be confirmed>
+│   ├── 01_scrubref_publication_cifar.ipynb
+│   └── 02_scrubref_fast_publication_imagewoof.ipynb
 ├── configs/
 │   ├── fast-publication/
 │   │   └── imagewoof.yaml
@@ -64,7 +64,7 @@ Each notebook is intended to clone the repository in its first cell before runni
 
 ### Publication notebook
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/imnima2005/scrubref-unlearning/blob/main/notebooks/01_multi_seed_benchmarking%20(4).ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/imnima2005/scrubref-unlearning/blob/main/notebooks/01_scrubref_publication_cifar.ipynb)
 
 The publication notebook is the notebook numbered **01**. It covers CIFAR-10 and CIFAR-100 and is less conservative about RAM than the fast-publication notebook. Select the desired configuration in the notebook; that selection is applied to `ExperimentConfig`.
 
@@ -75,7 +75,7 @@ Available publication configurations:
 
 ### Fast-publication notebook
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/imnima2005/scrubref-unlearning/blob/main/notebooks/02_fast_publication_imagewoof_(3)%20(1).ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/imnima2005/scrubref-unlearning/blob/main/notebooks/02_scrubref_fast_publication_imagewoof.ipynb)
 
 The fast-publication notebook is more conservative about RAM. It is currently defaulted to ImageWoof-320 and uses:
 
