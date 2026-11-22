@@ -32,7 +32,6 @@ class DataBundle:
     def input_shape(self) -> Tuple[int, int, int]:
         return self.image_size + (self.channels,)
 
-
 @dataclass
 class UnlearningSplit:
     retain_train_items: np.ndarray
