@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "ScrubRef-Rep"
+abstract: "A fast, representation-aware framework for class-level machine unlearning via generative proxy synthesis, masked knowledge distillation, and structural objectives."
+authors:
+  - given-names: "Azadeh"
+    family-names: "Tabatabaei"
+    affiliation: "Department of Computer Engineering, University of Science and Culture, Tehran, Iran"
+  - given-names: "Amirsaman"
+    family-names: "Shohrati"
+    affiliation: "Department of Computer Engineering, University of Science and Culture, Tehran, Iran"
+version: "0.1.0"
+date-released: "2026-09-02"
+url: ""
+preferred-citation:
+  type: article
+  title: "ScrubRef-Rep: Representation-aware class-level machine unlearning for enhanced privacy"
+  authors:
+    - family-names: "Tabatabaei"
+      given-names: "Azadeh"
+    - family-names: "Shohrati"
+      given-names: "Amirsaman"
+  year: 2026
+  journal: "High-Confidence Computing"
+  doi: "10.1016/j.hcc.2026.100427"
