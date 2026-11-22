@@ -105,14 +105,7 @@ These points should be considered when interpreting comparisons or reproducing t
 
 ## Citation
 
-The paper is published, but its title, authors, venue, year, and URL were not supplied here. Please complete the citation details from `CITATION.cff` and the published paper before release:
-
-```text
-TODO: Insert the paper's canonical citation from CITATION.cff.
-TODO: Confirm title, authors, venue, publication year, and URL.
-```
-
-For citation metadata, see [`CITATION.cff`](CITATION.cff).
+If you use this repository, please cite the published paper. Citation metadata is available in [`CITATION.cff`](CITATION.cff).
 
 ## License
 
