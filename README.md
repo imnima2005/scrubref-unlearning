@@ -28,10 +28,9 @@ The supplied information does not specify which values map to which dataset. Ver
 ## Repository layout
 
 ```text
-.
-├── readme.md
+├── README.md
 ├── requirements.txt
-├── License
+├── LICENSE
 ├── CITATION.cff
 ├── .gitignore
 ├── notebooks/
@@ -56,12 +55,6 @@ The supplied information does not specify which values map to which dataset. Ver
 The exact notebook filenames are intentionally left as placeholders because they were not supplied. Replace the two notebook placeholders and the Colab links below with the repository's actual paths before publishing.
 
 ## Requirements and setup
-
-From the repository root:
-
-```bash
-pip install -r requirements.txt
-```
 
 The notebooks download the datasets into `data/` when run. Original/base models are stored in `checkpoints/`, and runtime outputs are written to `results/`.
 
